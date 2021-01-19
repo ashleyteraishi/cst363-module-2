@@ -1,3 +1,4 @@
+-- Ashley Teraishi
 -- e5.1 Exercises from chapter 5
 --
 -- Before you begin:
@@ -31,8 +32,9 @@ ON product.productid = includes.productid
 AND salestransaction.tid = includes.tid
 GROUP BY category.categoryid;
 
+
 -- 4 Display RegionID, RegionName and total amount of sales as AmountSpent
-SELECT region.regionid, region.regionname, product.productprice * SUM(includes.quantity) AS AmountSpent
+SELECT region.regionid, region.regionname, SUM(product.productprice * includes.quantity) AS AmountSpent
 FROM region
 JOIN store
 ON region.regionid = store.regionid
@@ -43,27 +45,37 @@ JOIN includes
 ON product.productid = includes.productid
 AND salestransaction.tid = includes.tid
 GROUP BY region.regionid;
--- NEEDS REVIEW
 
 
 -- 5 Display the TID and total number of items in the sale
 --    for all sales where the total number of items is greater than 3
-SELECT salestransaction.tid, SUM(includes.quantity) AS NumItems
+SELECT DISTINCT salestransaction.tid, SUM(includes.quantity)
 FROM salestransaction
-INNER JOIN includes 
+JOIN includes
 ON salestransaction.tid = includes.tid
-WHERE includes.quantity > 3
-GROUP BY salestransaction.tid;
--- NEEDS REVIEW
+GROUP BY salestransaction.tid
+HAVING SUM(quantity) > 3;
+
 
 -- 6 For vendor whose product sales exceeds $700, display the
 --    VendorID, VendorName and total amount of sales as "TotalSales"
+SELECT vendor.vendorid, vendor.vendorname, SUM(product.productprice * includes.quantity) AS TotalSales
+FROM vendor 
+JOIN product 
+ON vendor.vendorid = product.vendorid
+JOIN includes
+ON product.productid = includes.productid
+JOIN salestransaction
+ON includes.tid = salestransaction.tid
+GROUP BY vendor.vendorid, vendor.vendorname
+HAVING SUM(product.productprice * includes.quantity) > '700';
 
 
 -- 7 Display the ProductID, Productname and ProductPrice
 --    of the cheapest product.
 SELECT productid, productname, MIN(productprice)
 FROM product;
+
 
 -- 8 Display the ProductID, Productname and VendorName
 --    for products whose price is below average price of all products
@@ -74,6 +86,7 @@ RIGHT JOIN product
 ON vendor.vendorid = product.productid
 WHERE productprice < (SELECT AVG(productprice) FROM product)
 GROUP BY productid;
+
 
 -- 9 Display the ProductID and Productname from products that
 --    have sold more than 2 (total quantity).  Sort by ProductID
@@ -90,6 +103,15 @@ HAVING SUM(quantity) > 2;
 -- 10 Display the ProductID for the product that has been 
 --    sold the most (highest total quantity across all
 --    transactions). 
+SELECT product.productid, SUM(includes.quantity) AS Quantity
+FROM product
+JOIN salestransaction
+JOIN includes
+ON product.productid = includes.productid
+AND salestransaction.tid = includes.tid
+GROUP BY product.productid
+ORDER BY Quantity DESC
+LIMIT 1;
 
 
 -- 11 Rewrite query 30 in chapter 5 using a join.
